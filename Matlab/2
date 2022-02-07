@@ -1,0 +1,95 @@
+%Emre Çifçi MATLAB Final 2
+%this is a script that sweeps over the values of k from k_ini to k_max,
+%then creates a confusion matrix, finds the k value that gives the max TCC
+%percentage and plot TCC percentage-odd k values table. we use
+%Matlab_Final_1 code to make a prediction with given k, a vector in the
+%validation set and a training set. this code only assumes that there are
+%two labels (as a result: confusion matrix is 2 by 2) but we can use
+%different training sets and validation sets and different intervals for
+%k values.this is something makes the code useful.
+
+%in this code we assume that there are two labels defined as 1 and 2
+
+%this code takes training set, validation set, initial k value and the
+%final k value. we were recommended to sweep k from 1 to 35, but it was
+%unsufficient to compare TCC percentages of k values bigger than 3. That's
+%why I come up with an inital value of k. with the help of this approach,
+%we can find max TCCs for all intervals.
+
+training_set=input('training set with labels matrix : ');
+validation_set=input('validation_set : ');
+k_ini=input('(choose an odd value) find TCC from k = ');
+k_max=input('(choose an odd value) to k = ');
+[row,col]=size((validation_set),1,2);
+%dim is for the dimension of each vector in validation set
+dim=col-1;
+k=k_ini;
+
+%we know that, we have two classes, then k must be an odd value from k_ini
+%to k_max. so, in order to work better, we can change k= 3 5 7 9... to 
+% u= 1 2 3 4... for this, we must convert k values to u values, and this is
+% possible if we use (k+1)/2-diff formula where diff is the difference
+% between 1 and (k_ini+1)/2 values. so, to be clear, k= 3 5 7 9... is first
+% converted to 2 3 4 5... and then 1 2 3 4.... by doing this we can avoid
+% having some zero values for matrices and vectors.
+
+% "how_many" finds out how many k values we have from k_ini to k_max
+how_many=((k_max+1)/2-(k_ini+1)/2)+1;
+diff=(k_ini+1)/2-1;
+%TCC_mat is a vector which shows found TCC's for u= 1 2 3 4
+TCC_mat=zeros(1,how_many);
+%just like in the algorithm, we have a typical confusion table for all u
+%values (means for all k values)
+c_mat=zeros(2,2,how_many);
+confusion_mat=zeros(2,2,how_many);
+while k~=k_max+2
+    t_1=0;
+    t_2=0;
+    for i=1:row
+        u=(k+1)/2-diff;
+        %"truevalue" is the real label of the ith vector in the
+        %validation set
+        truevalue=validation_set(i,col);
+        %vec is the ith vector in the validation set 
+        vec=validation_set(i,(1:dim));
+        %MATLAB_Final_1 works here to make a prediction with the desired
+        %k value, then we fill the confusion table for this u.
+        predicted=Matlab_Final_1(training_set,vec,k);
+        if(predicted==1 && truevalue==1)
+            c_mat(1,1,u)=c_mat(1,1,u)+1;
+            t_1=t_1+1;
+        end
+        if(predicted==1 && truevalue==2)
+            c_mat(2,1,u)=c_mat(2,1,u)+1;
+            t_2=t_2+1;
+        end
+        if(predicted==2 && truevalue==1)
+            c_mat(1,2,u)=c_mat(1,2,u)+1;
+            t_1=t_1+1;
+        end
+        if(predicted==2 && truevalue==2)
+            c_mat(2,2,u)=c_mat(2,2,u)+1;
+            t_2=t_2+1;
+        end
+    end
+    TCC=(c_mat(1,1,u)+c_mat(2,2,u))/row;
+    TCC_mat(1,u)=TCC;
+    confusion_mat(1,1,u)=(c_mat(1,1,u)*100)/t_1;
+    confusion_mat(1,2,u)=(c_mat(1,2,u)*100)/t_1;
+    confusion_mat(2,1,u)=(c_mat(2,1,u)*100)/t_2;
+    confusion_mat(2,2,u)=(c_mat(2,2,u)*100)/t_2;
+    k=k+2;
+end
+[max_TCC,index]=max(TCC_mat);
+%now we have to convert u's to k's in order to show max_k_value at which we
+%have the maximum TCC value.
+max_k_value = 2*(index+diff)-1;
+fprintf('Max TCC is found : %.2f when k = %d \n',100*max_TCC,max_k_value);
+fprintf('Confusion table for this k value : \n');
+disp(confusion_mat(:,:,index));
+x=k_ini:2:k_max;
+plot(x,100*TCC_mat(1:end),'b'); 
+xlabel('odd k values');
+ylabel('TCC (%)');
+ylim([0 100]);
+title('k-TCC Table');
