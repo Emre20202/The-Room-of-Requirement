@@ -1,0 +1,87 @@
+//This example code is in the Public Domain (or CC0 licensed, at your option.)
+//By Evandro Copercini - 2018
+//
+//This example creates a bridge between Serial and Classical Bluetooth (SPP)
+//and also demonstrate that SerialBT have the same functionalities of a normal Serial
+
+#include "BluetoothSerial.h"
+#include "Arduino.h"
+#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
+#endif
+
+BluetoothSerial SerialBT;
+float ldr1=34;
+float ldr2=4;
+float ldr3=15;
+
+const int numreadings=10;
+float readings1[numreadings];
+float readings2[numreadings];
+float readings3[numreadings];
+float total1,total2,total3;
+float average1,average2,average3;
+int ind=0;
+
+void setup() {
+  Serial.begin(115200);
+  SerialBT.begin("ESP32test"); //Bluetooth device name
+  Serial.println("The device started, now you can pair it with bluetooth!");
+  /*
+  log_d("Total heap: %d", ESP.getHeapSize());
+  log_d("Free heap: %d", ESP.getFreeHeap());
+  log_d("Total PSRAM: %d", ESP.getPsramSize());
+  log_d("Free PSRAM: %d", ESP.getFreePsram());
+  */
+  for(int i=0; i<numreadings;i++){
+    readings1[i]=0;
+    readings2[i]=0;
+    readings3[i]=0;
+  }
+}
+
+void loop() {
+  if (Serial.available()) {
+    SerialBT.write(Serial.read());
+  }
+  if (SerialBT.available()) {
+    Serial.write(SerialBT.read());
+  }
+  //Serial.println("I am happy");
+  total1=total1-readings1[ind];
+  total2=total2-readings2[ind];
+  total3=total3-readings3[ind];
+  float ldrvalue1=analogRead(ldr1);
+  float ldrvalue2=analogRead(ldr2);
+  float ldrvalue3=analogRead(ldr3);
+  //float average=(ldrvalue1+ldrvalue2+ldrvalue3)/3;
+  readings1[ind]=ldrvalue1;
+  readings2[ind]=ldrvalue2;
+  readings3[ind]=ldrvalue3;
+  total1=total1+readings1[ind];
+  total2=total2+readings2[ind];
+  total3=total3+readings3[ind];
+  ind=ind+1;
+  if(ind >= numreadings){
+    ind=0;
+  }
+  average1=total1/numreadings;
+  average2=total2/numreadings;
+  average3=total3/numreadings;
+  //Serial.print("LDR values are:");
+  Serial.print(" ");
+  Serial.print(average1);
+  Serial.print(" ");
+  Serial.print(average2);
+  Serial.print(" ");
+  Serial.print(average3);
+  Serial.print(" ");
+  //Serial.print(average);
+  Serial.print(" ");
+  Serial.println("t ");
+  if (SerialBT.available()) {
+    Serial.println(average1);
+  }
+  delay(5);
+  delay(20);
+}
