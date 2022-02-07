@@ -1,0 +1,76 @@
+function [maxpower,maxpRL] = loadresistorcase(filename)
+%EE Project 1 (Bonus)- Emre Çifçi-2019401012
+%This function takes a text-file's name, searchs RL and change its resistance
+%value and uses findnodevoltages function to find its node voltages'
+%values. It follows the same procedure for lots of randomly chosen RL values. 
+%Finally, it returns what is the max power dissipated by RL and the
+%corresponding RL resistance value.
+fid=fopen(filename);
+num = 0;
+power=[];
+RL=[];
+c_elements= struct();
+%this while loop takes all data from the text file and puts it in a struct 
+%named as elements.
+while feof(fid) == 0
+    %found out that the best way of taking the data is using fgetl
+    aline=fgetl(fid);
+    num = num+1;
+    if num >= 1
+    c_elements(num).name = aline(1:2);
+    c_elements(num).input = str2double(aline(4));
+    c_elements(num).output = str2double(aline(6));
+    c_elements(num).value=str2double(aline(8:end)); 
+    end
+end
+fclose(fid);
+%We could have used some other intervals with different increment-values
+%so, they are randomly chosen
+for RLresistance=1:0.2:30
+    %now we create a new text file, change RL and print all remaining
+    %information that we had in the text file. For this we use 'w' format.
+    fid=fopen('testfile.txt','w');
+    for i=1:num
+        node1 = c_elements(i).input;
+        node2 = c_elements(i).output;
+        name = c_elements(i).name;
+        value = c_elements(i).value;
+        %If its name is RL
+        if(strcmp(name,'RL'))
+            %We print RLresistance instead of value(elements(i).value)
+            fprintf(fid,'%s %f %f %f\n',name,node1...
+                ,node2,RLresistance);
+            %We save RL's nodes in order to compute its power
+            RLn1=node1;
+            RLn2=node2;
+        else
+            fprintf(fid,'%s %f %f %f\n',name,node1...
+                ,node2,value);
+        end
+    end
+    fclose(fid);
+    %For this resistance value, we have done with our new text file.
+    %Now, it is time for applying our findnodevoltages function to get node
+    %voltages as a vector.
+    nodevoltages = findnodevoltages('testfile.txt');
+    %But the voltages that we need are RLn1 and RLn2 and their difference
+    if(RLn1==0)
+        difference=abs(nodevoltages(RLn2));
+    else
+    difference = abs(nodevoltages(RLn1)-nodevoltages(RLn2));
+    end
+    %We need to store RLresistances to find out the maxpRL and to plot.
+    %There are warnings of MATLAB here: The variables 'RL' and 'power' 
+    %appear to change size on every loop iteration. 
+    %This is something upgradable for this code.
+    RL(end+1)= RLresistance;
+    %P=(V^2)/R:
+    power(end+1)= difference^2 / RLresistance;     
+end
+plot(RL,power);
+xlabel('RL resistance values');
+ylabel('Power dissipated by RL');
+title('Power-RL');
+[maxpower,ind]=max(power);
+maxpRL=RL(ind);
+end
