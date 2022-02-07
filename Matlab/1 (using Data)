@@ -1,0 +1,63 @@
+%Emre Çifçi MATLAB Final 1
+%this function takes a training set, a vector which we do not know its
+%label and k value which is a part of k-NN algoritm as input and then
+%make a prediction for this vector's label as its output called "predicted"
+function predicted=Matlab_Final_1(train_set,unknown_ins,k)
+[numofins,col]=size((train_set),1,2);
+%we know that third column for the train set in the DATA.tr (or the last
+%column for an n-dimensional instances) is for indicating its class. that's
+%why, we reduce "col" by one.
+dim=col-1;
+%here, NN is a (numofins x 3) matrix that represents (i,1):label, (i,2):i,
+%(i,3):ith vector in the train set. we find the distance between the vector
+%called "unknown_ins" and all others in the training set by using the
+%"eucledian" function.
+NN=zeros(numofins,3);
+for i=1:numofins
+    vector1=train_set(i,(1:dim));
+    vector2=unknown_ins;
+    dist=eucledian(vector1,vector2);
+    NN(i,1)=train_set(i,col);
+    NN(i,2)=i;
+    NN(i,3)=dist;
+end
+%sortrows function puts NN matrix in order with respect to "distance":(i,3)
+NN = sortrows(NN,3);
+j=numofins;
+%but we only want the first "k" rows of NN matrix. so we delete the rest.
+while j~=k
+    NN(j,:)=[];
+    j=j-1;
+end
+%t_class1 and t_class2 show us the sum of predictions for both classes.
+t_class1=0;
+t_class2=0;
+%we know NN(u,1) is the label of the closest vector to "unknown instance"
+%and this goes on up to NN(u,k).
+%we assume that there are two labels defined as 1 and 2.
+for u=1:k
+    if(NN(u,1)==1)
+        t_class1=t_class1+1;
+    else
+        t_class2=t_class2+1;
+    end
+end
+if(t_class2>t_class1)
+    predicted=2;
+else
+    predicted=1;
+end
+%this function takes two vectors as inputs and then finds out the distance
+%between them as its output 'distance'.
+function distance = eucledian(vec1, vec2)
+s1=size((vec1),2);
+s2=size((vec2),2);
+if(s1==s2)
+    sum=0;
+    for q=1:s1
+        sum=sum+(vec1(1,q)-vec2(1,q)).^2;
+    end
+end
+distance=sum^(1/2);
+end
+end
