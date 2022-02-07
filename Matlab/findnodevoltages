@@ -1,0 +1,118 @@
+%sample circuit:
+%V1 0 1 10 
+%R1 0 2 5 
+%I1 0 3 -2 
+%R2 0 3 10 
+%R3 1 2 1 
+%RL 2 3 2 
+
+function NodeVoltages=findnodevoltages(filename)
+%EE Project 1 - Emre Çifçi-2019401012
+%findnodevoltages function takes a filename as its input
+%output is the vector of NodeVoltages
+%additionally it prints this vector
+%opens text-file and scan it using textscan and then closes it
+fid=fopen(filename);
+cell= textscan(fid,'%s%f%f%f');
+fclose(fid);
+%corresponding headings are in this format
+rowHeading={'name','node1','node2','value'};
+%converts the cell obtained from textscan to a struct
+%for an easier work (indices, for loops etc.)
+struct=cell2struct(cell,rowHeading,2);
+%we know node2>node1 as an initial condition, thus in order to find
+%number of nodes(n), max(struct.node2) can be used.
+n=max(struct.node2);
+%number of ind. voltage sources is respresented by m, and will be
+%incremented in the loop when the struct.name(i) startswith 'V'.
+m=0;
+for i=1:length(struct.name)
+    if(startsWith(struct.name(i),'V'))
+        m=m+1;
+    end
+end
+%now,m value is known and can be used while some matrices are made
+%G(nxn),B(nxm),I(nx1),E(mx1) are made by zeros function.
+%G and B are the upper part of A
+%I;E is the Z matrix when A*X=Z
+G=zeros(n,n);
+B=zeros(n,m);
+I=zeros(n,1);
+E=zeros(m,1);
+%Voltage source's number (from 1 to m) is needed in the following loop 
+%We need each voltage source's order in order to put the values at their
+%corresponding indices.
+voltagecounter=0;
+%We could have used struct.node1 or struct.node2, it does not matter,
+%the length is the same
+for i=1:length(struct.name)
+    %finds resistances
+    if(startsWith(struct.name(i),'R'))
+        %for each node
+        for u=1:n
+            %if its node 1 or node 2 is u
+            if(struct.node1(i)==u || struct.node2(i)==u)
+                value=struct.value(i);
+                %G(u,u) is incremented by 1/its resistance value
+                G(u,u)=G(u,u)+1/value;
+            end
+            %also when node 1 is u
+            if(struct.node1(i)==u)
+                no2=struct.node2(i);
+                %G(u,node2) is decremented by 1/its resistance value
+                G(u,no2)=G(u,no2)-1/value;
+                G(no2,u)=G(no2,u)-1/value;
+            end
+        end    
+    end
+    %finds ind. voltage sources
+    if(startsWith(struct.name(i),'V'))
+        %determine which voltage source is it
+        voltagecounter=voltagecounter+1;
+        n1=struct.node1(i);
+        n2=struct.node2(i);
+        %%%%
+        E(voltagecounter,1)=struct.value(i);
+        %We know node1<node2, so we can just check if the value is greater
+        %than 0 or not. If it is greater, we know node2 is on the positive
+        %direction and node1 is on the opposite. So, it is OK to change
+        %signs if it is less than 0.
+        if(struct.value(i)>0)
+            if(n1~=0)
+                B(n1,voltagecounter)=-1;
+            end
+            B(n2,voltagecounter)=1;
+        end
+        if(struct.value(i)<0)
+            if(n1~=0)
+                B(n1,voltagecounter)=1;
+            end
+            B(n2,voltagecounter)=-1;
+        end
+    end
+    %finds ind. current sources
+    if(startsWith(struct.name(i),'I'))
+        node1=struct.node1(i);
+        node2=struct.node2(i);
+        %there is no indice like (0,n) in the matrix, so our condition is
+        %n1~= 0, since we know its direction by looking at its sign(just
+        %like the voltage sources), we can increment or decrement its
+        %current value according to it.
+        if(node1~=0)
+            I(node1,1)=I(node1,1)-struct.value(i);
+        end
+        I(node2,1)=I(node2,1)+struct.value(i);
+    end
+end
+%C is only the transpose of B
+C=transpose(B);
+%D(mxm) is zero matrix
+D=zeros(voltagecounter,voltagecounter);
+A=[G B; C D];
+Z=[I;E];
+%%%A and Z are made in A*X=Z equation so X=A^(-1)*Z
+X=A^(-1)*Z;
+%Its first n rows are the node voltages
+NodeVoltages=X(1:n,1);
+disp(NodeVoltages);
+end
