@@ -1,0 +1,228 @@
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEScan.h>
+#include <BLEAdvertisedDevice.h>
+#include <BLEDevice.h>
+#include <BLEServer.h>
+#include <BLEUtils.h>
+#include <BLE2902.h>
+#include "MPU9250.h"
+
+MPU9250 mpu;
+
+BLEServer* pServer = NULL;
+BLECharacteristic* pCharacteristic = NULL;
+bool deviceConnected = false;
+bool oldDeviceConnected = false;
+int value1 = 0;
+int value2 = 0;
+int value3 = 0;
+
+int val4=0;
+int val5=0;
+int val6=0;
+uint8_t val1,val2,val3;
+// See the following for generating UUIDs:
+// https://www.uuidgenerator.net/
+
+#define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
+#define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+
+
+class MyServerCallbacks: public BLEServerCallbacks {
+    void onConnect(BLEServer* pServer) {
+      deviceConnected = true;
+    };
+
+    void onDisconnect(BLEServer* pServer) {
+      deviceConnected = false;
+    }
+};
+
+//////////////////
+float ldr1=34;
+float ldr2=4;
+float ldr3=15;
+
+const int numreadings=10;
+float readings1[numreadings];
+float readings2[numreadings];
+float readings3[numreadings];
+float total1,total2,total3;
+int average1,average2,average3;
+int ind=0;
+
+
+
+void setup() {
+  Serial.begin(115200);
+  MPU9250 mySensor;
+  // Create the BLE Device
+  BLEDevice::init("ESP32");
+  Wire.begin();
+    delay(2000);
+
+    if (!mpu.setup(0x68)) {  // change to your own address
+        while (1) {
+            Serial.println("MPU connection failed. Please check your connection with `connection_check` example.");
+            delay(5000);
+        }}
+  // Create the BLE Server
+  pServer = BLEDevice::createServer();
+  pServer->setCallbacks(new MyServerCallbacks());
+
+  // Create the BLE Service
+  BLEService *pService = pServer->createService(SERVICE_UUID);
+
+  // Create a BLE Characteristic
+  pCharacteristic = pService->createCharacteristic(
+                      CHARACTERISTIC_UUID,
+                      BLECharacteristic::PROPERTY_READ   |
+                      BLECharacteristic::PROPERTY_WRITE  |
+                      BLECharacteristic::PROPERTY_NOTIFY |
+                      BLECharacteristic::PROPERTY_INDICATE
+                    );
+
+  // https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.descriptor.gatt.client_characteristic_configuration.xml
+  // Create a BLE Descriptor
+  pCharacteristic->addDescriptor(new BLE2902());
+
+  // Start the service
+  pService->start();
+
+  // Start advertising
+  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+  pAdvertising->addServiceUUID(SERVICE_UUID);
+  pAdvertising->setScanResponse(false);
+  pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
+  BLEDevice::startAdvertising();
+  Serial.println("Waiting a client connection to notify...");
+  ////////////////////
+  for(int i=0; i<numreadings;i++){
+    readings1[i]=0;
+    readings2[i]=0;
+    readings3[i]=0;
+    }
+    }
+void loop() {
+    // notify changed value
+  total1=total1-readings1[ind];
+  total2=total2-readings2[ind];
+  total3=total3-readings3[ind];
+  float ldrvalue1=analogRead(ldr1);
+  float ldrvalue2=analogRead(ldr2);
+  float ldrvalue3=analogRead(ldr3);
+  //float average=(ldrvalue1+ldrvalue2+ldrvalue3)/3;
+  readings1[ind]=ldrvalue1;
+  readings2[ind]=ldrvalue2;
+  readings3[ind]=ldrvalue3;
+  total1=total1+readings1[ind];
+  total2=total2+readings2[ind];
+  total3=total3+readings3[ind];
+  ind=ind+1;
+  if(ind >= numreadings){
+    ind=0;
+  }
+  average1=total1/numreadings;
+  average2=total2/numreadings;
+  average3=total3/numreadings;
+
+  /*
+  Serial.print(" ");
+  Serial.print(ldrvalue1);
+  Serial.print(" ");
+  Serial.print(average2);
+  Serial.print(" ");
+  Serial.print(average3);
+  Serial.print(" ");
+  //Serial.print(average);
+  Serial.print(" ");
+  Serial.println("t ");
+  //delay(5);
+  */
+  if (mpu.update()) {
+        static uint32_t prev_ms = millis();
+        if (millis() > prev_ms + 25) {
+            
+            prev_ms = millis();
+        }
+    }
+    if (deviceConnected) {
+      //(uint8_t*)&value, 4
+        value1=average1;
+        value2=average2;
+        value3=average3;
+        /*
+        char val1[8];
+        char val2[8];
+        char val3[8];
+        char x1[8];
+        char x2[8];
+        char x3[8];
+        val4=mpu.getYaw();
+        val5=mpu.getPitch();
+        val6=mpu.getRoll();
+        
+        dtostrf(value1, 1, 2, val1);
+        dtostrf(value2, 1, 2, val2);
+        dtostrf(value3, 1, 2, val3);
+        dtostrf(val4,1,2,x1);
+        dtostrf(val5,1,2,x2);
+        dtostrf(val6,1,2,x3);
+        //val1=map(value1,0,4500,0,255);
+        */
+        val1=map(value1,0,4500,0,255);
+        val2=map(value2,0,4500,0,255);
+        val3=map(value3,0,4500,0,255);
+        char val11[8];
+        dtostrf(val1,1,2,val11);
+        val4=mpu.getYaw();
+        val5=mpu.getPitch();
+        val6=mpu.getRoll();
+        
+         //(uint8_t*)&value, 4
+         pCharacteristic->setValue(val11);
+         pCharacteristic->notify();
+         delay(500);
+         pCharacteristic->setValue((uint8_t*)&val2,1);
+         pCharacteristic->notify();
+         delay(500);
+         pCharacteristic->setValue((uint8_t*)&val3,1);
+         pCharacteristic->notify();
+         delay(500);
+         pCharacteristic->setValue((uint8_t*)&val4,1);
+         pCharacteristic->notify();
+         delay(500);
+         pCharacteristic->setValue((uint8_t*)&val5,1);
+         pCharacteristic->notify();
+         delay(500);
+         pCharacteristic->setValue((uint8_t*)&val6,1);
+         pCharacteristic->notify();
+         delay(500);
+        
+        /*
+        pCharacteristic->setValue(val2);
+        pCharacteristic->notify();
+        delay(500);
+        pCharacteristic->setValue(val3);
+        pCharacteristic->notify();
+        delay(500); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
+        */
+    }
+    // disconnecting
+    if (!deviceConnected && oldDeviceConnected) {
+        delay(500); // give the bluetooth stack the chance to get things ready
+        pServer->startAdvertising(); // restart advertising
+        Serial.println("start advertising");
+        oldDeviceConnected = deviceConnected;
+    }
+    // connecting
+    if (deviceConnected && !oldDeviceConnected) {
+        // do stuff here on connecting
+        oldDeviceConnected = deviceConnected;
+    }
+    
+
+delay(500);
+
+}
