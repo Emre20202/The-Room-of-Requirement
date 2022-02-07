@@ -1,0 +1,82 @@
+%Emre Çifçi-EE313-HW1
+rng('default');
+%Q1:
+%%
+clear;
+clc;
+A=randi([-10,10],1,1000);
+subplot(1,2,1);
+histogram(A);
+title('Sample Set With 1000 Samples');
+xlabel('Range of the Samples');
+ylabel('Number of Each Variable');
+
+B=randi([-10,10],1,100000);
+subplot(1,2,2);
+histogram(B);
+title('Sample Set With 100000 Samples');
+xlabel('Range of the Samples');
+ylabel('Number of Each Variable');
+
+sgtitle('Dicrete Uniform Random Variable');
+
+
+%%
+%Q2:
+
+C=geornd(0.5,1,1000);
+subplot(1,2,1);
+histogram(C);
+title('Sample Set With 1000 Samples');
+xlabel('Range of Geometric Random Variable');
+ylabel('Number of Each Variable');
+
+D=geornd(0.5,1,100000);
+subplot(1,2,2);
+histogram(D);
+title('Sample Set With 100000 Samples');
+xlabel('Range of Geometric Random Variable');
+ylabel('Number of Each Variable');
+
+sgtitle('Geometric Random Variable with p=0.5');
+
+
+%%
+%Q3:
+
+E=binornd(10,0.2,1,1000);
+subplot(1,2,1);
+histogram(E);
+title('Sample Set With 1000 Samples');
+xlabel('Range of Binomial Random Variable');
+ylabel('Number of Each Variable');
+
+F=binornd(10,0.2,1,100000);
+subplot(1,2,2);
+histogram(F);
+title('Sample Set With 100000 Samples');
+xlabel('Range of Binomial Random Variable');
+ylabel('Number of Each Variable');
+
+sgtitle('Binomial Random Variable with n=10, p=0.2');
+
+
+%%
+%Q4:
+
+X=exprnd(1,1,100000);
+subplot(1,2,1);
+histogram(X);
+title('Exponential Random Variable');
+xlabel('Range of Exponential Random Variable');
+ylabel('Number of Each Variable');
+
+size=[1,100000];
+U=unifrnd(0,1,size);
+fx=-log(1-U);
+subplot(1,2,2);
+histogram(fx);
+title('Transformed Sample Set');
+xlabel('Range of Uniform Random Variable');
+ylabel('Number of Each Variable');
+
