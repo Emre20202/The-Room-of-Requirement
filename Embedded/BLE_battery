@@ -1,0 +1,93 @@
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEServer.h> //Library to use BLE as server
+#include <BLE2902.h> 
+//Server is ESP32 and the client is our mobile phone
+bool _BLEClientConnected = false; //is not connected yet
+
+#define BatteryService BLEUUID((uint16_t)0x180F) //define battery service: 0x180F is predetermined ->
+//#define Headset BLEUUID((uint16_t)0x184B)
+
+//#define BatteryService BLEUUID((uint16_t)0x1131)
+//#define BatteryService BLEUUID((uint16_t)0x2BA9)
+//https://btprodspecificationrefs.blob.core.windows.net/assigned-values/16-bit%20UUID%20Numbers%20Document.pdf
+
+BLECharacteristic BatteryLevelCharacteristic(BLEUUID((uint16_t)0x2A19), BLECharacteristic::PROPERTY_READ | 
+BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_INDICATE | BLECharacteristic::PROPERTY_WRITE);
+
+
+//BLECharacteristic AudioInput(BLEUUID((uint16_t)0x2B77), BLECharacteristic::PROPERTY_READ | 
+//BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_INDICATE);
+
+//define battery level characteristic and find its corresponding UUID using the same link above
+//GATT Characteristic and Object Type 0x2A19 Battery Level
+//this characteristic is represented with two properties: read and notify
+
+BLEDescriptor BatteryLevelDescriptor(BLEUUID((uint16_t)0x2901));
+//using the same link, but we could not enter the description page
+//more explanation needed
+
+//BLEDescriptor AudioDes(BLEUUID((uint16_t)0x2901));
+
+class MyServerCallbacks : public BLEServerCallbacks {//"A server callback is used to ensure that the connection
+   void onConnect(BLEServer* pServer) {              // between client and server is established successfully"
+      _BLEClientConnected = true;
+    };
+   void onDisconnect(BLEServer* pServer) {
+      _BLEClientConnected = false;
+    }
+};
+
+int output=15;
+float value;
+float value2;
+uint8_t percen;
+//smoothing process might be needed
+
+void setup() {
+  Serial.begin(115200);
+  BLEDevice::init("BLE Battery"); //name of the Bluetooth device
+  BLEServer *pServer = BLEDevice::createServer(); //create a server called "pServer"
+  //-----------
+  BLEService *pHeadset= pServer->createService(Headset);
+  ///////////////
+  //BLEService *pBattery= pServer->createService(BatteryService); //create a service called "pBattery" under the same server
+  pServer->setCallbacks(new MyServerCallbacks()); //set call backs for the server using the class above 
+  //pBattery->addCharacteristic(&BatteryLevelCharacteristic); //add characteristic defined at the very beginning of this code to the servic
+  //--------------
+  pHeadset->addCharacteristic(&BatteryLevelCharacteristic);
+  //pHeadset->addCharacteristic(&AudioInput);
+  
+  
+  ////////////////
+  BatteryLevelDescriptor.setValue("Percentage 0 - 100"); //descriptor helps us to notify values as percentage in the range of 0 to 100
+  BatteryLevelCharacteristic.addDescriptor(&BatteryLevelDescriptor); //add this descriptor to the characteristic
+  BatteryLevelCharacteristic.addDescriptor(new BLE2902()); //"a piece of software on the client side that informs the server to turn notification On or Off" 
+  //---------
+  //AudioInput.addDescriptor(&BatteryLevelDescriptor);
+  //AudioInput.addDescriptor(new BLE2902());
+  pServer->getAdvertising()->addServiceUUID(Headset);
+  pHeadset->start();
+  //////////////
+  
+  //pServer->getAdvertising()->addServiceUUID(BatteryService); //add service UUID before advertising is started
+  //pBattery->start(); //start the service
+  pServer->getAdvertising()->start(); //start advertising and wait for a client to connect our server
+}
+
+void loop() {
+  value=analogRead(output);
+  value2=value;
+  value=value*(100.0/4097.0);
+  percen=value;
+  if(value > 99.5){
+    percen=100;}
+  BatteryLevelCharacteristic.setValue(&percen, 1);
+  BatteryLevelCharacteristic.notify();
+  BatteryLevelCharacteristic.indicate();
+
+  delay(3000);
+  Serial.println(value2);
+  Serial.print(" ");
+  Serial.println(value);
+}
