@@ -1,0 +1,319 @@
+%EMRE ÇİFÇİ-EE 313-HW 2
+%1)
+%E[A]=n*E[K]
+%Var[A]=n*Var[K]
+%%
+%2)a:
+arr=[1,2,3,5,10];
+count=1;
+while(count<6)
+    n=arr(1,count);
+    mysum=0.0;
+    for a = 1:n
+        unif=unifrnd(-5,5,1,10000);
+        mysum=mysum+unif;
+    end
+  
+    subplot(3,2,count);
+    histogram(mysum,'Normalization','Probability');
+    title("A when n ="+n);
+    xlabel("Range");
+    ylabel("Norm. Val.");
+    count=count+1;
+end
+%%
+%2)a continues:
+arr=[1,2,3,5,10];
+count=1;
+while(count<6)
+    x=linspace(-5*count,5*count,10000);
+    n=arr(1,count);
+    mysum=0.0;
+    for a = 1:n
+        unif=unifrnd(-5,5,1,10000);
+        mysum=mysum+unif;
+    end
+    gauss=normpdf(x,0,(25.0*n/3)^(1/2));
+    subplot(3,2,count);
+    
+    plot(x,gauss,'b--','LineWidth',2);
+    hold on
+    histogram(mysum,'Normalization','Probability');
+    hold off
+    title("A when n ="+n);
+    xlabel("Range");
+    ylabel("Norm. Val.");
+    xlim([-5*count,5*count]);
+    count=count+1;
+end    
+    
+%%    
+%2)b:
+n=10;   
+mysum=0;
+x=linspace(-30,30,100000);
+for a = 1:n
+        unif=unifrnd(-5,5,1,100000);
+        mysum=mysum+unif;
+end   
+gauss=normpdf(x,0,(25.0*10/3)^(1/2));
+plot(x,gauss,'b--','LineWidth',2);
+hold on;
+histogram(mysum,'Normalization','Probability');
+hold off;
+title("A when n=10 with 100k samples");
+xlabel("Range");
+ylabel("Norm. Val.");
+%%
+%2)c:
+n=10;
+mysum=0;
+x=linspace(-60,60,10000);
+for a=1:n
+    unif=unifrnd(-10,10,1,10000);
+    mysum=mysum+unif;
+end    
+gauss=normpdf(x,0,(100.0*10/3)^(1/2));
+plot(x,gauss,'b--','LineWidth',2);
+hold on;
+histogram(mysum,'Normalization','Probability');
+hold off;
+title("A when n=10 with -10 to 10 unif. range");
+xlabel("Range");
+ylabel("Norm. val.");
+%%
+%3)a:
+arr=[1,2,3,5,10];
+count=1;
+while(count<6)
+    n=arr(1,count);
+    mysum=0.0;
+    for a = 1:n
+        myexp=exprnd(1,1,10000);
+        mysum=mysum+myexp;
+    end
+    
+    subplot(3,2,count);
+    histogram(mysum,'Normalization','Probability');
+    title("A when n ="+n);
+    xlabel("Range");
+    ylabel("Norm. Val.");
+    count=count+1;
+end
+%%
+%3)a continues
+arr=[1,2,3,5,10];
+count=1;
+x=linspace(0,20,10000);
+while(count<6)
+    n=arr(1,count);
+    mysum=0.0;
+    for a = 1:n
+        myexp=exprnd(1,1,10000);
+        mysum=mysum+myexp;
+    end
+    
+    gauss=normpdf(x,n,n^(1/2));
+    subplot(3,2,count);
+    histogram(mysum,'Normalization','Probability');
+    hold on;
+    plot(x,gauss,'b--','LineWidth',2);
+    hold off;
+   
+    title("A when n ="+n);
+    xlabel("Range");
+    ylabel("Norm. Val.");
+    count=count+1;
+end
+%%
+%3)b:
+n=10;   
+mysum=0;
+x=linspace(0,25,100000);
+for a = 1:n
+        myexp=exprnd(1,1,100000);
+        mysum=mysum+myexp;
+end   
+gauss=normpdf(x,10,10^(1/2));
+plot(x,gauss,'b--','LineWidth',2);
+hold on;
+histogram(mysum,'Normalization','Probability');
+hold off;
+title("A when n=10 with 100k samples");
+xlabel("Range");
+ylabel("Norm. Val.");
+%%
+%3)c:
+n=10;
+mysum=0;
+x=linspace(0,40,10000);
+for a=1:n
+    myexp=exprnd(2,1,10000);
+    mysum=mysum+myexp;
+end    
+gauss=normpdf(x,5,(0.25*n)^(1/2));
+plot(x,gauss,'b--','LineWidth',2);
+hold on;
+histogram(mysum,'Normalization','Probability');
+hold off;
+title("A when n=10 with λ=2");
+xlabel("Range");
+ylabel("Norm. val.");
+%%
+%4)a:
+arr=[1,2,3,5,10];
+count=1;
+while(count<6)
+    n=arr(1,count);
+    mysum=0.0;
+    for a = 1:n
+        myber=binornd(1,0.5,1,10000);
+        mysum=mysum+myber;
+    end
+    subplot(3,2,count);
+    histogram(mysum,'Normalization','cdf');
+    title("A when n ="+n);
+    xlabel("Range");
+    ylabel("Norm. Val.");
+    count=count+1;
+end
+%%
+%4)a continues
+arr=[1,2,3,5,10];
+x=linspace(0,15,10000);
+count=1;
+while(count<6)
+    n=arr(1,count);
+    mysum=0.0;
+    for a = 1:n
+        myber=binornd(1,0.5,1,10000);
+        mysum=mysum+myber;
+    end
+    
+    gauss=normcdf(x,n/2,(0.25*n)^(1/2));
+    subplot(3,2,count);
+    histogram(mysum,'Normalization','cdf');
+    hold on;
+    plot(x,gauss,'r--','LineWidth',2);
+    hold off;
+   
+    title("A when n ="+n);
+    xlabel("Range");
+    ylabel("Norm. Val.");
+    count=count+1;
+end
+%%
+%4)b:
+n=10;   
+mysum=0;
+x=linspace(0,15,10000);
+for a = 1:n
+     myber=binornd(1,0.5,1,100000);
+     mysum=mysum+myber;
+end   
+gauss=normcdf(x,5,(2.5)^(1/2));
+plot(x,gauss,'b--','LineWidth',2);
+hold on;
+histogram(mysum,'Normalization','cdf');
+hold off;
+title("A when n=10 with 100k samples");
+xlabel("Range");
+ylabel("Norm. Val.");
+%%
+%4)c:
+n=10;
+mysum=0;
+x=linspace(0,15,10000);
+for a=1:n
+    myber=binornd(1,0.75,1,10000);
+    mysum=mysum+myber;
+end    
+gauss=normcdf(x,30/4,(30/16)^(1/2));
+plot(x,gauss,'b--','LineWidth',2);
+hold on;
+histogram(mysum,'Normalization','cdf');
+hold off;
+title("A when n=10 with p=0.75");
+xlabel("Range");
+ylabel("Norm. val.");
+%%
+%5)a:
+arr=[1,2,3,5,10];
+count=1;
+while(count<6)
+    n=arr(1,count);
+    mysum=0.0;
+    for a = 1:n
+        mypois=poissrnd(1,1,10000);
+        mysum=mysum+mypois;
+    end
+    subplot(3,2,count);
+    histogram(mysum,'Normalization','cdf');
+    title("A when n ="+n);
+    xlabel("Range");
+    ylabel("Norm. Val.");
+    count=count+1;
+end
+%%
+%5)a continues
+arr=[1,2,3,5,10];
+count=1;
+x=linspace(0,30,10000);
+while(count<6)
+    n=arr(1,count);
+    mysum=0.0;
+    for a = 1:n
+        mypois=poissrnd(1,1,100000);
+        mysum=mysum+mypois;
+    end
+    
+    gauss=normcdf(x,n,(n)^(1/2));
+    subplot(3,2,count);
+    histogram(mysum,'Normalization','cdf');
+    hold on;
+    plot(x,gauss,'r--','LineWidth',2);
+    hold off;
+   
+    title("A when n ="+n);
+    xlabel("Range");
+    ylabel("Norm. Val.");
+    count=count+1;
+end
+%%
+%5)b:
+n=10;   
+mysum=0;
+x=linspace(0,30,10000);
+for a = 1:n
+     mypois=poissrnd(1,1,100000);
+     mysum=mysum+mypois;
+end   
+gauss=normcdf(x,10,(10)^(1/2));
+plot(x,gauss,'b--','LineWidth',2);
+hold on;
+histogram(mysum,'Normalization','cdf');
+hold off;
+title("A when n=10 with 100k samples");
+xlabel("Range");
+ylabel("Norm. Val.");
+%%
+%5)c:
+n=10;
+mysum=0;
+x=linspace(0,40,10000);
+for a=1:n
+     mypois=poissrnd(2,1,10000);
+     mysum=mysum+mypois;
+end    
+gauss=normcdf(x,20,20^(1/2));
+plot(x,gauss,'b--','LineWidth',2);
+hold on;
+histogram(mysum,'Normalization','cdf');
+hold off;
+title("A when n=10 with λ=2");
+xlabel("Range");
+ylabel("Norm. val.");
+%%
+%The end of the code
+%Details of this code & plots briefly explained
+%in the report.
