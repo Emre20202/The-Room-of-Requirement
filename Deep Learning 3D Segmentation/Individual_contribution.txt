@@ -1,0 +1,19 @@
+Emre Çifçi - Deep Learning Module 2 – CAD Model Segmentation using UNET 
+ Individual Contribution to the Project
+
+After successfully implementing the code, I ran the code and noted the default values for the hyperparameters.
+Then, I continued to run the code several times and compared the accuracy and metrics results according to different hyperparameters
+(learning rate and hyperparameters with the batch size). Then, I noted those values in an Excel sheet. I also noted the accuracy values
+for both training and validation sets for the 9th, 10th, 11th, and 12th epochs, so that I tried to find the saturation epoch.
+To find the saturation epoch, knowing that it is something really dependent on the network and the accuracy we expect,
+I specified a threshold of 0.005. If the accuracy change is more than this value, the code checks the next accuracy value for the next epoch,
+otherwise, this epoch is said to be the saturation epoch. After that, I stopped giving an interval for the learning rate and different
+options of the optimization functions to “Optuna” and gave those values manually according to previous results.
+Then, I also noted those values and compared the results with the previous ones. Finally, I found the “best” hyperparameters values 
+for the learning rate and the “best” optimization function. After that, I tried different loss functions and noted the changed results 
+on the excel sheet. After finding all the “best” values for them, I merged the code with the augmented data. I saved those results too,
+and we showed them in our presentation.
+However, I tried to change the UNet network and changed the activation function at the last layer from sigmoid to SoftMax,
+but I did not have enough time to ask and learn it. That’s why, I could not tune the network a lot, instead, I tuned the hyperparameters.
+It was very important work that helped me a lot to understand how a deep learning network is built and tuned.
+
